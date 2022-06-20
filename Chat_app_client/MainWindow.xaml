@@ -96,7 +96,7 @@
                         </Button>
                     </Border>
                     <Border Margin="3" CornerRadius="2">
-                        <Button Width="40" >
+                        <Button Width="40" Click="SendFile">
                             <Button.Background>
                                 <ImageBrush ImageSource="Icon/plus_icon.png" Stretch="Fill"></ImageBrush>
                             </Button.Background>

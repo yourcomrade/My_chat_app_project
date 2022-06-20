@@ -25,8 +25,9 @@
                     <StackPanel Orientation="Horizontal">
                         <Label Content="{Binding Username}"/>
                         <Label Content="{Binding Date_time}" />
+                        <TextBlock Text="{Binding Lastest_message}" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding Message,UpdateSourceTrigger=PropertyChanged,Mode=OneWay}" TextWrapping="Wrap"/>
+                    
                 </Grid>
                 <Grid Grid.Column="2">
                 </Grid>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Mime;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,7 +35,6 @@ namespace Chat_app_client
                             "Portable Network Graphic (*.png)|*.png";
                 if (op.ShowDialog() == true)
                 {
-                    
                     Application.Current.Dispatcher.InvokeAsync(() =>
                     {
                         BitmapImage bitimg= new BitmapImage();
@@ -53,12 +53,30 @@ namespace Chat_app_client
                             vm.Load_ava.Execute(fs);
                         }
                     },DispatcherPriority.Background);
-                    
-                    
+                       
                 }
 
             });
 
+        }
+
+        private async void SendFile(object sender, RoutedEventArgs e)
+        {
+            await Task.Run(() =>
+            {
+                OpenFileDialog op = new OpenFileDialog();
+                op.Title = "Select a file to send";
+                if (op.ShowDialog() == true)
+                {
+                    Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        var file_path = op.FileName;
+                        var vm = DataContext as MyMainViewModel;
+                        vm.Send_file.Execute(file_path);
+                    },DispatcherPriority.Background);
+                    
+                }
+            });
         }
     }
 }

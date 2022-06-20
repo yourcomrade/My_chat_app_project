@@ -70,13 +70,13 @@ namespace Test_server
                     byte[] file_name_len = new byte[4];
                     file_name_len = BitConverter.GetBytes(file_name.Length);
                     byte[] file_content_len = new byte[8];
-                    file_content_len = BitConverter.GetBytes(File.OpenRead(file_name).Length);
+                    file_content_len = BitConverter.GetBytes(File.Open(file_name,FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite).Length);
                     byte[] file_content = new byte[1000];
                     m_ms.WriteByte(code); 
                     m_ms.Write(file_name_len, 0, 4);
                     m_ms.Write(file_content_len, 0, file_content_len.Length);
                     m_ms.Write(file_name_bytes, 0, file_name_bytes.Length);
-                    using (var file_stream = File.OpenRead(file_name))
+                    using (var file_stream =new FileStream(file_path,FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite))//do this to fix the error the file is being used by another process
                     {
                         while (true)
                         {
@@ -107,7 +107,7 @@ namespace Test_server
             byte[] file_name_bytes = new byte[len_of_file_name];
            m1= await m_ns.ReadAsync(file_name_bytes, 0, len_of_file_name);
             string file_name = Encoding.ASCII.GetString(file_name_bytes);
-            using (var File_stream = File.OpenWrite($"{file_name}"))
+            using (var File_stream = new FileStream($"{file_name}",FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.ReadWrite))
             {
                 long length = 0;
                 
@@ -120,7 +120,7 @@ namespace Test_server
                 }
                 Console.WriteLine($"File saved as: {file_name}");
                 Console.WriteLine($"Byte received: {File_stream.Length}");
-                await File_stream.FlushAsync().ConfigureAwait(false);
+                await File_stream.FlushAsync();
                 File_stream.Close();
             }
             

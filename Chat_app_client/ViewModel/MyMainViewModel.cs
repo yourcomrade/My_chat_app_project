@@ -26,7 +26,7 @@ namespace Chat_app_client.ViewModel
         }
 
         public ObservableCollection<UserInfoViewModel> users_list { get; set; }
-        public ObservableCollection<MessageInfoViewModel> chat_bubbles { get; set; }
+        public ObservableCollection<MessageInfo> chat_bubbles { get; set; }
         public UserInfoViewModel m_UserInfoViewModel { get; set; }
         public myServer_connect MyServerConnect { get; set; }
         private readonly object m_lock = new object();
@@ -40,7 +40,8 @@ namespace Chat_app_client.ViewModel
             }
         }
 
-        public async event Action Recvmess;
+        public event Action Recvmess;
+        public event Action Recvfile;
         public UserInfo myProfile { get; set; }
         public ICommand Init_connect_to_server { get; set; }
         public ICommand  Send_message { get; set; }
@@ -53,6 +54,7 @@ namespace Chat_app_client.ViewModel
         public ICommand  Load_ava { get; set; }
         //public myServer_connect MyServerConnect { get; set; }
         private string m_IPaddress="0";
+        public string RecvMess=String.Empty;
         public string IPaddress
         {
             get => m_IPaddress;
@@ -90,7 +92,7 @@ namespace Chat_app_client.ViewModel
         {
             
             users_list = new ObservableCollection<UserInfoViewModel>();
-            chat_bubbles = new ObservableCollection<MessageInfoViewModel>();
+            chat_bubbles = new ObservableCollection<MessageInfo>();
             
             myProfile = new UserInfo
             {
@@ -123,7 +125,17 @@ namespace Chat_app_client.ViewModel
                 p => !string.IsNullOrEmpty(myProfile.Username));
             Send_message = new RelayCommand(async p => await SendMessage(),
                 o => !string.IsNullOrEmpty(myProfile.Username));
+            Send_file = new RelayCommand<string>(async (p) => await m_Send_file(p), (p) =>
+            {
+                if (p == null)
+                {
+                    return false;
+                }
+                else
+                    return true;
+            });
             Recvmess += (async () => await MessageReceived());
+            Recvfile += (async () => await FileReceive());
 
         }
         
@@ -175,15 +187,17 @@ namespace Chat_app_client.ViewModel
                    switch (code)
                    {
                        case 3:
-                           TextMessage = await MyServerConnect.my_pack.Read_msgAsync();
+                           RecvMess = await MyServerConnect.my_pack.Read_msgAsync();
                             Recvmess?.Invoke();
+                           break;
+                       case 5:
+                           RecvMess = await MyServerConnect.my_pack.Recv_FileAsync();
                            break;
                        default:
                            MessageBox.Show(Convert.ToString(code));
                            break;
                    }
                    
-                
                 
             }
             
@@ -199,25 +213,38 @@ namespace Chat_app_client.ViewModel
         private async Task MessageReceived()
         {
             
-                Application.Current.Dispatcher.InvokeAsync(async () =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    var msg_arr = TextMessage.Split('$').ToArray();
-                    chat_bubbles.Add(new MessageInfoViewModel
+                    var msg_arr = RecvMess.Split('$').ToArray();
+                    chat_bubbles.Add(new MessageInfo
                     {
                         Date_time = DateTime.Now.ToShortDateString(),
                         Is_mess = true,
-                        Message = msg_arr[2],
+                        Lastest_message = msg_arr[2],
                         Username = msg_arr[0],
                         UserID = msg_arr[1]
                     });
                 });
-               
-            
-            
-           
-               
-                
-                
+        }
+
+        private async Task m_Send_file(string fs)
+        {
+            await MyServerConnect.my_pack.Send_FileAsync(fs, 4);
+        }
+
+        private async Task FileReceive()
+        {
+            Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                chat_bubbles.Add(new MessageInfo
+                {
+                    Date_time = DateTime.Now.ToShortDateString(),
+                    Is_mess = true,
+                    Lastest_message = RecvMess,
+                    Username = string.Empty,
+                    UserID = string.Empty
+                });
+            });
         }
        
     }
